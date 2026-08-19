@@ -1,27 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Box, Check, ChevronDown, GitCommitHorizontal, Languages, Network,
   Redo2, Save, Search, Undo2, UserRound, X,
 } from 'lucide-react'
 import './App.css'
-
-const DEPARTMENTS = [
-  { id: 'ai', name: 'AI開発部', en: 'AI Development' },
-  { id: 'sales', name: 'ソリューション営業部', en: 'Solution Sales' },
-  { id: 'cs', name: 'カスタマーサクセス', en: 'Customer Success' },
-]
-
-const INITIAL_PEOPLE = [
-  { id: 'EMP001', name: '佐藤 健太', latin: 'Sato Kenta', role: 'Lead Architect', dept: 'ai', jobFit: 92, traits: ['挑戦心 88', '誠実性 94', '論理性 90'] },
-  { id: 'EMP014', name: '田中 雅人', latin: 'Tanaka Masato', role: 'ML Engineer', dept: 'ai', jobFit: 74, traits: ['挑戦心 62', '敏捷性 80', '情報欲 85'] },
-  { id: 'EMP022', name: '小林 優', latin: 'Kobayashi Yu', role: 'Data Scientist', dept: 'ai', jobFit: 88, traits: ['誠実性 91', '論理性 86', '完遂力 82'] },
-  { id: 'EMP045', name: '鈴木 一郎', latin: 'Suzuki Ichiro', role: 'Enterprise Sales', dept: 'sales', jobFit: 88, traits: ['説得交渉 90', 'ネットワーク 85', '向上心 86'] },
-  { id: 'EMP052', name: '伊藤 翔太', latin: 'Ito Shota', role: 'Inside Sales', dept: 'sales', jobFit: 54, traits: ['説得交渉 45', '誠実性 89', '論理性 92'] },
-  { id: 'EMP060', name: '中村 翼', latin: 'Nakamura Tsubasa', role: 'Account Executive', dept: 'sales', jobFit: 65, traits: ['説得交渉 68', '協調優先 72', '気さくさ 70'] },
-  { id: 'EMP089', name: '高橋 誠', latin: 'Takahashi Makoto', role: 'CS Lead', dept: 'cs', jobFit: 85, traits: ['協調優先 92', '感情安定 86', '配慮 89'] },
-  { id: 'EMP092', name: '渡辺 健', latin: 'Watanabe Ken', role: 'Onboarding Specialist', dept: 'cs', jobFit: 68, traits: ['協調優先 65', '感情安定 70', '役割意識 75'] },
-  { id: 'EMP105', name: '松本 遥', latin: 'Matsumoto Haruka', role: 'Support Lead', dept: 'cs', jobFit: 90, traits: ['協調優先 95', '感情安定 91', '回復力 88'] },
-]
+import { DEPARTMENTS, INITIAL_PEOPLE } from './mocks/organization.js'
 
 const scoreTone = (score) => score >= 80 ? 'good' : score >= 60 ? 'medium' : 'low'
 const deptFit = (person) => Math.max(40, Math.min(98, person.jobFit + ({ ai: 2, sales: -3, cs: 1 }[person.dept] || 0)))
@@ -37,6 +20,7 @@ function App() {
   const [dropDept, setDropDept] = useState(null)
   const [state, setState] = useState('DRAFT')
   const [notice, setNotice] = useState('')
+  const toastTimerRef = useRef(null)
 
   const selected = people.find((person) => person.id === selectedId)
   const canEdit = role !== 'viewer' && state !== 'COMMITTED'
@@ -46,11 +30,18 @@ function App() {
     return people.filter((person) => `${person.id} ${person.name} ${person.latin} ${person.role}`.toLowerCase().includes(normalized))
   }, [people, query])
 
+  useEffect(() => () => {
+    window.clearTimeout(toastTimerRef.current)
+  }, [])
+
   const flash = (message) => {
     setNotice(message)
-    window.clearTimeout(flash.timer)
-    flash.timer = window.setTimeout(() => setNotice(''), 1800)
+    window.clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = window.setTimeout(() => setNotice(''), 1800)
   }
+
+  // Demo-only masking. Production APIs must filter sensitive fields from verified JWT claims.
+  const visibleSensitiveTraits = (person) => role === 'hr' ? person.sensitiveTraits : []
 
   const movePerson = (id, nextDept) => {
     const person = people.find((item) => item.id === id)
@@ -136,10 +127,12 @@ function App() {
               <header className="lane-header"><div><h2>{department.name}</h2><p>{department.en}</p></div><div className="lane-summary"><strong>{average ?? '—'}%</strong><span>{members.length} thành viên</span></div></header>
               <div className="lane-content">
                 {members.map((person) => <article key={person.id} className={`person-card tone-${scoreTone(person.jobFit)}`} draggable={canEdit}
-                  onDragStart={() => setDraggingId(person.id)} onClick={() => setSelectedId(person.id)} tabIndex={0}>
-                  <div className="person-heading"><i className={`dot ${scoreTone(person.jobFit)}`} /><div><h3>{person.id}: {person.name}</h3><p>{person.latin} · {person.role}</p></div><span className={`fit-pill ${scoreTone(person.jobFit)}`}>Fit {person.jobFit}%</span></div>
-                  <div className="trait-row">{person.traits.map((trait) => <span key={trait}>{trait}</span>)}</div>
-                  <select className="mobile-move" value="" disabled={!canEdit} onClick={(event) => event.stopPropagation()} onChange={(event) => movePerson(person.id, event.target.value)}><option value="">Chuyển tới…</option>{DEPARTMENTS.filter((item) => item.id !== person.dept).map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select>
+                  onDragStart={() => setDraggingId(person.id)}>
+                  <button type="button" className="person-card-open" onClick={() => setSelectedId(person.id)} aria-label={`Xem hồ sơ ${person.id} ${person.name}`}>
+                    <div className="person-heading"><i className={`dot ${scoreTone(person.jobFit)}`} /><div><h3>{person.id}: {person.name}</h3><p>{person.latin} · {person.role}</p></div><span className={`fit-pill ${scoreTone(person.jobFit)}`}>Fit {person.jobFit}%</span></div>
+                    <div className="trait-row">{person.traits.map((trait) => <span key={trait}>{trait}</span>)}{visibleSensitiveTraits(person).map((trait) => <span className="sensitive-trait" key={trait}>{trait}</span>)}</div>
+                  </button>
+                  <select className="move-select" value="" disabled={!canEdit} aria-label={`Chuyển ${person.id} sang phòng ban khác`} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onChange={(event) => movePerson(person.id, event.target.value)}><option value="">Chuyển tới…</option>{DEPARTMENTS.filter((item) => item.id !== person.dept).map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select>
                 </article>)}
                 {!members.length && <div className="empty-drop"><Network size={20} /><span>Thả thẻ nhân sự vào đây</span><small>Dự kiến cập nhật Fit Score ngay lập tức</small></div>}
               </div>
