@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools >=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "peoplelens-be"
+version = "0.1.0"
+description = "PeopleLens backend foundation"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "fastapi>=0.139.2,<0.140.0",
+    "uvicorn[standard]>=0.52.2,<0.53.0",
+    "google-cloud-firestore>=2.21.0,<3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.1.1,<10.0.0",
+    "httpx2>=2.9.0,<3.0.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
