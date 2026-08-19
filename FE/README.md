@@ -1,16 +1,82 @@
-# React + Vite
+# PeopleLens Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This repository contains the standalone frontend for PeopleLens. The backend is developed and deployed in a separate repository.
 
-Currently, two official plugins are available:
+## Technology stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19
+- Vite 8
+- Lucide React
+- Vitest and Testing Library
+- Oxlint
 
-## React Compiler
+## Requirements
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js `^20.19.0` or `>=22.12.0`
+- npm, included with Node.js
 
-## Expanding the Oxlint configuration
+## Installation and local development
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+git clone https://github.com/Hduc2412/PeopleLens.git
+cd PeopleLens
+npm ci
+npm run dev -- --host 127.0.0.1
+```
+
+Open the frontend at:
+
+```text
+http://127.0.0.1:5173/
+```
+
+The backend and its Swagger documentation usually run at:
+
+```text
+http://127.0.0.1:8000/
+http://127.0.0.1:8000/docs
+```
+
+`/docs` is the backend API documentation, not the frontend website.
+
+## Backend configuration
+
+Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Available environment variables:
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000
+VITE_DATA_SOURCE=mock
+```
+
+The Simulation Board currently uses mock data. Set `VITE_DATA_SOURCE=api` only after the backend API adapter has been implemented.
+
+## Quality checks
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+## Current scope
+
+- Department-based Simulation Board.
+- Employee search.
+- Employee transfers through drag and drop or an accessible select control.
+- Mock Undo/Redo, save draft, submit, and commit workflows.
+- HR Admin, Manager, and Viewer interface roles.
+- Mock masking of sensitive employee fields.
+
+Frontend masking is not a replacement for backend authorization. Once the application uses real data, the backend must filter sensitive fields according to verified JWT claims before returning a response.

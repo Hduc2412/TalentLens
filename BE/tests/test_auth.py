@@ -1,4 +1,6 @@
+import os
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import jwt
 import pytest
@@ -12,8 +14,25 @@ from app.core.config import Settings
 from app.main import app
 
 
-ISSUER = "https://issuer.example.test"
-AUDIENCE = "peoplelens-api"
+CLIENT_ID = 2093
+COMPANY_ID = 3831
+
+
+@pytest.fixture(autouse=True)
+def isolate_mosa_environment(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+):
+    for name in tuple(os.environ):
+        if name == "MOSA_ENVIRONMENT" or name.startswith("MOSA_JWT_"):
+            monkeypatch.delenv(name)
+
+    # Settings reads a relative .env file, so run each test away from any
+    # developer-local configuration as well as clearing process variables.
+    monkeypatch.chdir(tmp_path)
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 @pytest.fixture
@@ -37,8 +56,7 @@ def configured_settings(rsa_keys: tuple[bytes, bytes]) -> Settings:
     return Settings(
         environment="test",
         jwt_public_key=public_pem.decode(),
-        jwt_issuer=ISSUER,
-        jwt_audience=AUDIENCE,
+        jwt_allowed_client_id=CLIENT_ID,
     )
 
 
@@ -55,10 +73,10 @@ def make_token(private_pem: bytes, **claims: object) -> str:
 
 def valid_claims(**overrides: object) -> dict[str, object]:
     claims: dict[str, object] = {
-        "sub": "user-123",
+        "uid": "user-123",
         "email": "user@example.com",
-        "iss": ISSUER,
-        "aud": AUDIENCE,
+        "client_id": CLIENT_ID,
+        "company_id": COMPANY_ID,
         "iat": datetime.now(timezone.utc),
         "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
     }
@@ -79,9 +97,40 @@ def test_auth_me_returns_principal_for_valid_token(
 
     assert response.status_code == 200
     assert response.json() == {
-        "sub": "user-123",
+        "uid": "user-123",
         "email": "user@example.com",
-        "issuer": ISSUER,
+        "client_id": CLIENT_ID,
+        "company_id": COMPANY_ID,
+    }
+
+
+def test_auth_me_accepts_literal_escaped_pem_from_environment(
+    monkeypatch: pytest.MonkeyPatch,
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    private_pem, public_pem = rsa_keys
+    monkeypatch.setenv("MOSA_ENVIRONMENT", "production")
+    monkeypatch.setenv(
+        "MOSA_JWT_PUBLIC_KEY",
+        public_pem.decode().replace("\n", "\\n"),
+    )
+    monkeypatch.setenv("MOSA_JWT_ALLOWED_CLIENT_ID", str(CLIENT_ID))
+    get_settings.cache_clear()
+    app.dependency_overrides.clear()
+    token = make_token(private_pem, **valid_claims())
+
+    with TestClient(app) as client:
+        response = client.get(
+            "/auth/me",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "uid": "user-123",
+        "email": "user@example.com",
+        "client_id": CLIENT_ID,
+        "company_id": COMPANY_ID,
     }
 
 
@@ -92,13 +141,28 @@ def test_auth_me_rejects_missing_token() -> None:
     assert response.headers["www-authenticate"] == "Bearer"
 
 
+def test_auth_me_does_not_accept_cookie_token(
+    rsa_keys: tuple[bytes, bytes],
+) -> None:
+    private_pem, _ = rsa_keys
+    token = make_token(private_pem, **valid_claims())
+
+    response = TestClient(app).get(
+        "/auth/me",
+        cookies={"access-token": token},
+    )
+
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
+
+
 @pytest.mark.parametrize(
     "claims",
     [
         {"exp": datetime.now(timezone.utc) - timedelta(minutes=1)},
-        {"iss": "https://wrong-issuer.example.test"},
-        {"aud": "wrong-audience"},
-        {"sub": None},
+        {"client_id": CLIENT_ID + 1},
+        {"company_id": COMPANY_ID + 1},
+        {"uid": None},
     ],
 )
 def test_auth_me_rejects_invalid_claims(
@@ -107,6 +171,44 @@ def test_auth_me_rejects_invalid_claims(
 ) -> None:
     private_pem, _ = rsa_keys
     token = make_token(private_pem, **valid_claims(**claims))
+
+    response = TestClient(app).get(
+        "/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Invalid authentication credentials"}
+
+
+@pytest.mark.parametrize(
+    "missing_claim", ["exp", "uid", "client_id", "company_id"]
+)
+def test_auth_me_rejects_missing_required_claim(
+    rsa_keys: tuple[bytes, bytes],
+    missing_claim: str,
+) -> None:
+    private_pem, _ = rsa_keys
+    claims = valid_claims()
+    claims.pop(missing_claim)
+    token = make_token(private_pem, **claims)
+
+    response = TestClient(app).get(
+        "/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Invalid authentication credentials"}
+
+
+@pytest.mark.parametrize("email", [123, [], {"value": "invalid"}])
+def test_auth_me_rejects_malformed_email_claim(
+    rsa_keys: tuple[bytes, bytes],
+    email: object,
+) -> None:
+    private_pem, _ = rsa_keys
+    token = make_token(private_pem, **valid_claims(email=email))
 
     response = TestClient(app).get(
         "/auth/me",
@@ -192,8 +294,7 @@ def test_auth_me_reports_invalid_public_key_configuration() -> None:
     app.dependency_overrides[get_settings] = lambda: Settings(
         environment="test",
         jwt_public_key="not-a-pem-key",
-        jwt_issuer=ISSUER,
-        jwt_audience=AUDIENCE,
+        jwt_allowed_client_id=CLIENT_ID,
     )
 
     response = TestClient(app).get("/auth/me")
@@ -202,9 +303,30 @@ def test_auth_me_reports_invalid_public_key_configuration() -> None:
     assert response.json() == {"detail": "Authentication is not configured"}
 
 
-def test_production_settings_require_auth_configuration() -> None:
-    with pytest.raises(ValidationError):
-        Settings(environment="production")
+def test_application_startup_fails_in_production_without_auth_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("MOSA_ENVIRONMENT", "production")
+    get_settings.cache_clear()
+    app.dependency_overrides.clear()
+
+    with pytest.raises(ValidationError, match="Missing required production"):
+        with TestClient(app):
+            pass
+
+
+def test_application_startup_fails_in_production_with_invalid_rsa_pem(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("MOSA_ENVIRONMENT", "production")
+    monkeypatch.setenv("MOSA_JWT_PUBLIC_KEY", "not-a-pem-key")
+    monkeypatch.setenv("MOSA_JWT_ALLOWED_CLIENT_ID", str(CLIENT_ID))
+    get_settings.cache_clear()
+    app.dependency_overrides.clear()
+
+    with pytest.raises(ValidationError, match="valid RSA public PEM key"):
+        with TestClient(app):
+            pass
 
 
 def test_health_is_public_without_auth_configuration() -> None:
