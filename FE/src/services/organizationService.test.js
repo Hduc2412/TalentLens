@@ -14,6 +14,7 @@ describe('organization service', () => {
 
     first.people[0].dept = 'sales'
     expect(second.people[0].dept).toBe('ai')
+    expect(second.people.every((person) => !Object.hasOwn(person, 'sensitiveTraits'))).toBe(true)
   })
 
   it('loads departments and employees from the configured API', async () => {

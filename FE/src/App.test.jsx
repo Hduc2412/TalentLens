@@ -32,13 +32,11 @@ describe('PeopleLens simulation board', () => {
     expect(employeeCard.closest('.department-lane').querySelector('h2')).toHaveTextContent('ソリューション営業部')
   })
 
-  it('masks sensitive mock traits outside the HR role', async () => {
-    const user = userEvent.setup()
+  it('does not expose sensitive traits from the client mock dataset', () => {
     render(<App />)
 
-    expect(screen.getByText('ストレス耐性 78')).toBeInTheDocument()
-    await user.selectOptions(screen.getByDisplayValue('HR Admin'), 'viewer')
     expect(screen.queryByText('ストレス耐性 78')).not.toBeInTheDocument()
+    expect(screen.queryByText('メンタル安定 82')).not.toBeInTheDocument()
   })
 
   it('does not let an older toast timeout hide a newer toast', () => {

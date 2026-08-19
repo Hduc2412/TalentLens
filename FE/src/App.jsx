@@ -100,7 +100,7 @@ function App() {
 
     {!organization.loading && !organization.error && <section className="department-board">
       {organization.departments.map((department) => <DepartmentLane key={department.id} department={department} departments={organization.departments}
-        members={filtered.filter((person) => person.dept === department.id)} canEdit={canEdit} role={role} isDropTarget={dropDept === department.id}
+        members={filtered.filter((person) => person.dept === department.id)} canEdit={canEdit} isDropTarget={dropDept === department.id}
         onDropTargetChange={setDropDept} onDrop={dropPerson} onMove={movePerson} onSelect={setSelectedId} onDragStart={setDraggingId} />)}
       {!organization.departments.length && <section className="app-state"><span>Chưa có dữ liệu phòng ban.</span></section>}
     </section>}

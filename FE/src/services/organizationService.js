@@ -8,7 +8,6 @@ const cloneMockData = () => ({
   people: INITIAL_PEOPLE.map((person) => ({
     ...person,
     traits: [...person.traits],
-    sensitiveTraits: [...person.sensitiveTraits],
   })),
 })
 

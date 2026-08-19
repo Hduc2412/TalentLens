@@ -76,7 +76,7 @@ npm run build
 - Employee search.
 - Employee transfers through drag and drop or an accessible select control.
 - Mock Undo/Redo, save draft, submit, and commit workflows.
-- HR Admin, Manager, and Viewer interface roles.
-- Mock masking of sensitive employee fields.
+- HR Admin, Manager, and Viewer workflow simulation roles.
+- A non-sensitive mock dataset for local UI development.
 
-Frontend masking is not a replacement for backend authorization. Once the application uses real data, the backend must filter sensitive fields according to verified JWT claims before returning a response.
+The client role selector is only a workflow simulation control and is not an authorization boundary. In API mode, the backend must derive permissions from verified JWT claims and omit sensitive fields entirely for unauthorized principals before returning a response.
