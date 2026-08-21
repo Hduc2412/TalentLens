@@ -1,1 +1,136 @@
-:root{font-family:system-ui,'Segoe UI',Arial,sans-serif;color:#172033;background:#f7f8fa;font-synthesis:none;text-rendering:optimizeLegibility;--canvas:#f7f8fa;--surface:#fff;--soft:#f3f5f8;--ink:#172033;--muted:#6d778a;--hairline:rgba(31,79,216,.1);--hairline-strong:rgba(31,79,216,.16);--indigo:#1f4fd8;--cyan:#17b6d8;--green:#1a9e6e;--amber:#c9901a;--red:#e5484d;--shadow-small:0 5px 16px rgba(21,35,64,.07);--shadow-island:0 12px 34px rgba(21,35,64,.1)}*{box-sizing:border-box}body{margin:0;min-width:320px;min-height:100vh;background:var(--canvas)}button,input,select{font-family:inherit}button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}#root{min-height:100vh}
+@import 'tailwindcss';
+
+/* Mosa "The Still Instrument" design tokens, exposed as canonical utilities. */
+@theme {
+  --font-sans: system-ui, 'Segoe UI', Arial, sans-serif;
+
+  /* One notch below text-xs, for dense chart axis labels. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
+  --color-canvas: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-soft: #f3f5f8;
+  --color-ink: #172033;
+  --color-muted: #6d778a;
+  --color-indigo: #1f4fd8;
+  --color-cyan: #17b6d8;
+
+  /* Tinted-hairline rule: borders are low-opacity indigo, never flat grey. */
+  --color-hairline: rgba(31, 79, 216, 0.1);
+  --color-hairline-strong: rgba(31, 79, 216, 0.16);
+
+  /* Fit score bands. */
+  --color-good: #1a9e6e;
+  --color-medium: #c9901a;
+  --color-low: #e5484d;
+  --color-good-soft: rgba(26, 158, 110, 0.12);
+  --color-medium-soft: rgba(201, 144, 26, 0.12);
+  --color-low-soft: rgba(229, 72, 77, 0.12);
+
+  --shadow-small: 0 5px 16px rgba(21, 35, 64, 0.07);
+  --shadow-island: 0 12px 34px rgba(21, 35, 64, 0.1);
+}
+
+:root {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  /* Legacy aliases still consumed by the app shell stylesheet. */
+  --canvas: var(--color-canvas);
+  --surface: var(--color-surface);
+  --soft: var(--color-soft);
+  --ink: var(--color-ink);
+  --muted: var(--color-muted);
+  --hairline: var(--color-hairline);
+  --hairline-strong: var(--color-hairline-strong);
+  --indigo: var(--color-indigo);
+  --cyan: var(--color-cyan);
+  --green: var(--color-good);
+  --amber: var(--color-medium);
+  --red: var(--color-low);
+  --shadow-small: 0 5px 16px rgba(21, 35, 64, 0.07);
+  --shadow-island: 0 12px 34px rgba(21, 35, 64, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--color-canvas);
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/**
+ * Slim, tinted scrollbar for the scrolling panes.
+ *
+ * The thumb is always visible, just quiet: a pane whose scrollbar only appears
+ * on hover reads as having no more content. The gutter is reserved so cards
+ * never shift sideways when the thumb appears.
+ */
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-hairline-strong) transparent;
+  scrollbar-gutter: stable;
+}
+
+.scroll-slim:hover,
+.scroll-slim:focus-within {
+  scrollbar-color: var(--color-indigo) transparent;
+}
+
+.scroll-slim::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.scroll-slim::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* The transparent border plus content-box clipping is what insets the thumb,
+   leaving a 3px cushion of surface on either side of a 4px bar. */
+.scroll-slim::-webkit-scrollbar-thumb {
+  background-color: var(--color-hairline-strong);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+  transition: background-color 0.15s ease;
+}
+
+.scroll-slim:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(31, 79, 216, 0.35);
+}
+
+.scroll-slim::-webkit-scrollbar-thumb:hover,
+.scroll-slim::-webkit-scrollbar-thumb:active {
+  background-color: var(--color-indigo);
+}
+
+.scroll-slim::-webkit-scrollbar-corner {
+  background: transparent;
+}

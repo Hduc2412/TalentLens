@@ -1,0 +1,21 @@
+{
+  "app_name": "PeopleLens",
+  "app_tagline": "Organization fit viewer",
+  "language_short": "EN",
+  "language_ja": "日本語",
+  "language_en": "English",
+  "loading_organization": "Loading organization data…",
+  "error_title": "Could not load data from the backend",
+  "retry": "Retry",
+  "close": "Close",
+  "role_hr_admin": "HR Admin",
+  "role_hr_manager": "Manager",
+  "role_employee": "Employee",
+  "role_selector_label": "Role",
+  "data_source": "Data source",
+  "data_source_mock": "Mock",
+  "data_source_api": "API",
+  "sign_out": "Sign out",
+  "period_h1": "H1 {{year}}",
+  "period_h2": "H2 {{year}}"
+}

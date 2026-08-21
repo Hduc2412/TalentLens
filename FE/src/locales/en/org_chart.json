@@ -1,0 +1,18 @@
+{
+  "search_placeholder": "Search by Kanji, Kana, ID or role…",
+  "search_label": "Search talent",
+  "department_filter_label": "Filter by department",
+  "department_filter_all": "All departments",
+  "member_count": "{{count}} members",
+  "average_fit": "Average fit",
+  "no_score": "—",
+  "empty_department": "No matching members",
+  "empty_department_hint": "Try adjusting the search",
+  "no_departments": "No department data",
+  "no_results": "No talent matches the current search",
+  "open_profile": "Open profile of {{id}} {{name}}",
+  "move_department": "Move {{id}} to another department",
+  "move_placeholder": "Move to…",
+  "rank_aria": "Fit rank {{rank}}, score {{score}}",
+  "result_summary": "Showing {{shown}} of {{total}}"
+}

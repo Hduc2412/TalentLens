@@ -1,0 +1,21 @@
+{
+  "app_name": "PeopleLens",
+  "app_tagline": "組織適合ビューア",
+  "language_short": "JP",
+  "language_ja": "日本語",
+  "language_en": "English",
+  "loading_organization": "組織データを読み込み中…",
+  "error_title": "バックエンドからデータを取得できません",
+  "retry": "再試行",
+  "close": "閉じる",
+  "role_hr_admin": "HR管理者",
+  "role_hr_manager": "マネージャー",
+  "role_employee": "社員",
+  "role_selector_label": "ロール",
+  "data_source": "データソース",
+  "data_source_mock": "モック",
+  "data_source_api": "API",
+  "sign_out": "ログアウト",
+  "period_h1": "{{year}}年 上期",
+  "period_h2": "{{year}}年 下期"
+}

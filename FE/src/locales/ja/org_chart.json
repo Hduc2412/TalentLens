@@ -1,0 +1,18 @@
+{
+  "search_placeholder": "漢字・カナ・社員番号・役職で検索…",
+  "search_label": "人材検索",
+  "department_filter_label": "部門で絞り込み",
+  "department_filter_all": "すべての部門",
+  "member_count": "{{count}}名",
+  "average_fit": "平均適合度",
+  "no_score": "—",
+  "empty_department": "該当する人材がいません",
+  "empty_department_hint": "検索条件を変更してください",
+  "no_departments": "部門データがありません",
+  "no_results": "検索条件に一致する人材がいません",
+  "open_profile": "{{id}} {{name}} のプロフィールを開く",
+  "move_department": "{{id}} を他部門へ異動",
+  "move_placeholder": "異動先…",
+  "rank_aria": "適合ランク {{rank}}、スコア {{score}}",
+  "result_summary": "{{shown}} / {{total}} 名を表示"
+}
