@@ -1,0 +1,7 @@
+# Normalise line endings to LF in the repository and on checkout, everywhere.
+#
+# Without this, a Windows clone with the default core.autocrlf=true writes CRLF
+# to disk, and `prettier --check` — which expects LF — fails on every file. The
+# gate has to give the same answer on every machine, so the working copy is
+# pinned rather than each developer's git config.
+* text=auto eol=lf
